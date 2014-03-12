@@ -25,11 +25,11 @@ Turns out this is hard.  Really, really, really freaking hard.  I've made games 
 
 In the repo are three files.  In descending order of specialization, they are:
 
-* `server.js` - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.
+* server.js - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.
 
-* `client.html` - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.
+* client.html - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.
 
-* `console.html` - specially written to do nothing but run Dots and Boxes.
+* console.html - specially written to do nothing but run Dots and Boxes.
 
 Important note: much (most) of this code is crap.  Please a) don't judge me by it and b) feel free to fix and ask for a merge!
 
