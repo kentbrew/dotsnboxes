@@ -110,7 +110,7 @@ You die when you hit a wall instead of bouncing in order to encourage speeds to 
 
 You score a point for your team by pushing the big red box in the middle over your goal line.  
 
-I stumbled on the simple idea of right-left orientation according to your X vector, so if you are facing left and you hit someone on the other team who is also facing left, you are overtaking and hitting from behind.  It's kind of like Joust, from the old days.
+I stumbled on the simple idea of right-left orientation according to your X vector, so if you are facing left and you hit someone on the other team who is also facing left, you are overtaking and hitting from behind, so you win.  (It's kind of like Joust, from the old days.)
 
 Kills on overtake allow teams to have some players push while some players try to circle around behind and take out opposing players.  End zones are tight, to help with last-ditch defenses.
 
@@ -118,4 +118,9 @@ A limited number of drivable boxes (16) are available; this also helps keep it f
 
 I implemented trails by overlaying the entire screen with a black box at 10% opacity and then printing everything else on top of that at 100%. If you're moving, your previous nine impressions will show as a gradually fading trail.
 
+## Please help!
+
+If Dots and Boxes appeals, help would be very welcome.  Games are hard, socket.io is underdocumented, and this was a much more complicated project than I thought it was at first.  Fork it, fix it, and make it your own!  
+
+Thanks for listening, and special thanks to GitHub for their convert-your-readme-to-a-beautifully-formatted-page functionality, which made this presentation possible.
 
