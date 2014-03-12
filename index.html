@@ -56,9 +56,11 @@
 <h2>
 <a name="what-i-made-for-fluent" class="anchor" href="#what-i-made-for-fluent"><span class="octicon octicon-link"></span></a>What I Made for Fluent</h2>
 
+<p>Dots and boxes is a game for up to 16 active and many inactive players.  There's a big red box in the middle; your mission is to push it over the goal line.  You can also harass and bother the other players, by overtaking them from the rear.  First team to 7 points wins, and then the game resets.</p>
+
 <p>In the repo are three files.  In descending order of specialization, they are:</p>
 
-<p>server.js - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.</p>
+<p>server.js - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications, once many horrible bugs are fixed.</p>
 
 <p>client.html - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.</p>
 
@@ -67,6 +69,23 @@
 <p>Important note: much (most) of this code is crap.  Please a) don't judge me by it and b) feel free to fix and ask for a merge!</p>
 
 <p>The JavaScript inside the client and the console is case-hardened, meaning that it would (theoretically) run as third-party JavaScript inside any other Web page.  See my <a href="https://github.com/kentbrew/desuckify">De-Suckifying Third-Party JavaScript</a> talk for more about all that.</p>
+
+<h2>
+<a name="running" class="anchor" href="#running"><span class="octicon octicon-link"></span></a>Running</h2>
+
+<p>Everyone must be on the same network to play.  </p>
+
+<p>You'll need to figure out your IP address. I open up a terminal window and run netstat. </p>
+
+<p>Don't try to serve this from 127.0.0.1 or localhost; connected devices need to know the IP address running server.js or they won't be able to see it.</p>
+
+<p>Once you know your IP address, bring up a fresh window (Chrome = best as of now) and enter http://[youripaddress]:8001.  If all is good, the console will come up and show the right address for clients that wish to connect.  </p>
+
+<p>Don't run more than one console window; it would be Bad.</p>
+
+<p>When there's no wi-fi I've been able to create a network on my Macbook, have other devices join, and use my 169.XXX network.  If your network starts with 169, the connect URL will also show a network name; currently this is hardcoded to mine, which is usually <code>kentbrew</code>.  You'll need to fix that if you're creating your own disconnected network. </p>
+
+<p>iDevices will complain bitterly about connecting to this network; they will tell you that it isn't connected to the Internet, and then they will helpfully append www to your IP address if you don't start it with http://, but not actually SHOW YOU THAT THEY ARE DOING THIS, so it will just mysteriously fail.</p>
 
 <h2>
 <a name="the-breakdown" class="anchor" href="#the-breakdown"><span class="octicon octicon-link"></span></a>The Breakdown</h2>
@@ -89,15 +108,17 @@
 
 <p>The client is a simple Web page, with various <code>viewport</code> and <code>web-app-capable</code> header tags to keep it the right size in Apple devices.  Hopefully it will be fine in Android devices as well but I have not tested yet.</p>
 
-<p>If you're trying it out on a laptop, mousemove on your trackpad should work. Click to stop on the screen, but remember when you mouse off you will start moving again.</p>
-
 <p>Although the client is not animating anything on the screen I am using Paul Irish's <a href="http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/">requestAnimationFrame polyfill</a> for my timing loop and it seems to be doing all the right things.  Battery life is not unreasonable, even on my crusty old zero-generation iPad.</p>
-
-<p>Big caveat here: everyone must be on the same network to play.  When there's no wi-fi I've been able to create a network on my Macbook, have other devices join, and use my 169.XXX network.  iPhones complain bitterly about this; they will tell you that the network isn't connected to the Internet, and then they will helpfully append www to your IP address if you don't start it with http://.</p>
 
 <p>All the client does is project a square, in the color of the team (blue or yellow) that you are on.  The client itself makes this decision by modding the ID that socket.io assigns; if you want to be on the other team, reload the page.  (Crude, right? I warned you it was crude.)</p>
 
-<p>The pad is divided into a grid with an odd number of squares in each row and column. If you're pressing in the middle, you're at {x:0, y:0} and you won't move. If you go up a bit you'll be at  {x:0, y:-1} and your dot will start to move up.  All we're doing is communicating that pair of numbers from the client to the console, and if you or your vehicle hasn't hit a wall, the console will update on the next refresh with your location shifted in the right direction.  This means there's no tapping, no flicking, and none of the usual drag-down-go-back up stuff; it's just a joystick.</p>
+<p>The pad is divided into a grid with an odd number of squares in each row and column. If you're pressing in the middle, you're at {x:0, y:0} and you won't move. If you go up a bit you'll be at  {x:0, y:-1} and your dot will start to move up.  All we're doing is communicating that pair of numbers from the client to the console, and if you or your vehicle hasn't hit a wall, the console will update on the next refresh with your location shifted in the right direction.  </p>
+
+<p>This means there's no tapping, no flicking, and none of the usual drag-down-go-back up stuff; it's just a joystick.</p>
+
+<p>Unfortunate bug: if you're driving a box and you aren't moving, your box will face right. This gives an advantage to the yellow team, whose goal line is to the right.</p>
+
+<p>If you're trying it out on a laptop, mousemove on your trackpad should work. Click to stop on the screen, but remember when you mouse off you will start moving again.</p>
 
 <h3>
 <a name="consolehtml" class="anchor" href="#consolehtml"><span class="octicon octicon-link"></span></a>console.html</h3>
