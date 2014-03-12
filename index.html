@@ -58,13 +58,13 @@
 
 <p>In the repo are three files.  In descending order of specialization, they are:</p>
 
-<p>server.js - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.</p>
+<ul>
+<li><p><code>server.js</code> - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.</p></li>
+<li><p><code>client.html</code> - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.</p></li>
+<li><p><code>console.html</code> - specially written to do nothing but run Dots and Boxes.</p></li>
+</ul><p>Important note: much (most) of this code is crap.  Please a) don't judge me by it and b) feel free to fix and ask for a merge!</p>
 
-<p>client.html - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.</p>
-
-<p>console.html - specially written to do nothing but run Dots and Boxes.</p>
-
-<p>Important note: much (most) of this code is crap.  Please a) don't judge me by it and b) feel free to fix and ask for a merge!</p>
+<p>The JavaScript inside the client and the console is case-hardened, meaning that it would (theoretically) run as third-party JavaScript inside any other Web page.  See my <a href="https://github.com/kentbrew/desuckify">De-Suckifying Third-Party JavaScript</a> talk for more about all that.</p>
 
 <h2>
 <a name="the-breakdown" class="anchor" href="#the-breakdown"><span class="octicon octicon-link"></span></a>The Breakdown</h2>
@@ -83,9 +83,11 @@
 <p>Big problem I hit using socket.io: I can't figure out how to address a single client. When you die in the console, I should be able to send your handset a signal to let you know.</p>
 
 <h3>
-<a name="clientjs" class="anchor" href="#clientjs"><span class="octicon octicon-link"></span></a>client.js</h3>
+<a name="clienthtml" class="anchor" href="#clienthtml"><span class="octicon octicon-link"></span></a>client.html</h3>
 
 <p>The client is a simple Web page, with various <code>viewport</code> and <code>web-app-capable</code> header tags to keep it the right size in Apple devices.  Hopefully it will be fine in Android devices as well but I have not tested yet.</p>
+
+<p>If you're trying it out on a laptop, mousemove on your trackpad should work. Click to stop on the screen, but remember when you mouse off you will start moving again.</p>
 
 <p>Although the client is not animating anything on the screen I am using Paul Irish's <a href="http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/">requestAnimationFrame polyfill</a> for my timing loop and it seems to be doing all the right things.  Battery life is not unreasonable, even on my crusty old zero-generation iPad.</p>
 
@@ -93,12 +95,16 @@
 
 <p>All the client does is project a square, in the color of the team (blue or yellow) that you are on.  The client itself makes this decision by modding the ID that socket.io assigns; if you want to be on the other team, reload the page.  (Crude, right? I warned you it was crude.)</p>
 
+<p>The pad is divided into a grid with an odd number of squares in each row and column. If you're pressing in the middle, you're at {x:0, y:0} and you won't move. If you go up a bit you'll be at  {x:0, y:-1} and your dot will start to move up.  All we're doing is communicating that pair of numbers from the client to the console, and if you or your vehicle hasn't hit a wall, the console will update on the next refresh with your location shifted in the right direction.  This means there's no tapping, no flicking, and none of the usual drag-down-go-back up stuff; it's just a joystick.</p>
+
 <h3>
-<a name="consolejs" class="anchor" href="#consolejs"><span class="octicon octicon-link"></span></a>console.js</h3>
+<a name="consolehtml" class="anchor" href="#consolehtml"><span class="octicon octicon-link"></span></a>console.html</h3>
 
-<p>Some really horrible stuff in here, particularly my collision detection and player handling.  </p>
+<p>Like the client, the console is a simple load-once page that starts a socket connection and listens for input. It's the source of truth about where things live and what they're doing on the screen, not the game-runner at server.js.</p>
 
-<p>Players are in an object keyed by their socket ID; they should be in an array for much faster access. </p>
+<p>There's some genuinely horrible stuff in here, particularly my collision detection and player handling.  </p>
+
+<p>Players live in an object keyed by their socket ID; they should be in an array for much faster access. </p>
 
 <p>Collision detection is kept simple by the fact that everything on the screen is a square; all you need is this:</p>
 
