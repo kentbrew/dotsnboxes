@@ -25,13 +25,15 @@ Turns out this is hard.  Really, really, really freaking hard.  I've made games 
 
 In the repo are three files.  In descending order of specialization, they are:
 
-server.js - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.
+* `server.js` - serves socket.io plus the client and console files.  Also directs traffic.  This could be used for many applications.
 
-client.html - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.
+* `client.html` - starts socket.io, puts a touchpad on the screen, sends new position to server.js if the player makes a new move or stops moving.
 
-console.html - specially written to do nothing but run Dots and Boxes.
+* `console.html` - specially written to do nothing but run Dots and Boxes.
 
 Important note: much (most) of this code is crap.  Please a) don't judge me by it and b) feel free to fix and ask for a merge!
+
+The JavaScript inside the client and the console is case-hardened, meaning that it would (theoretically) run as third-party JavaScript inside any other Web page.  See my [De-Suckifying Third-Party JavaScript](https://github.com/kentbrew/desuckify) talk for more about all that.
 
 ## The Breakdown
 
@@ -47,9 +49,12 @@ When a socket connects, we attache three event listeners, `move`, `join`, and `c
 
 Big problem I hit using socket.io: I can't figure out how to address a single client. When you die in the console, I should be able to send your handset a signal to let you know.
 
-### client.js
+### client.html
+
 
 The client is a simple Web page, with various `viewport` and `web-app-capable` header tags to keep it the right size in Apple devices.  Hopefully it will be fine in Android devices as well but I have not tested yet.
+
+If you're trying it out on a laptop, mousemove on your trackpad should work. Click to stop on the screen, but remember when you mouse off you will start moving again.
 
 Although the client is not animating anything on the screen I am using Paul Irish's [requestAnimationFrame polyfill](http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/) for my timing loop and it seems to be doing all the right things.  Battery life is not unreasonable, even on my crusty old zero-generation iPad.
 
@@ -57,11 +62,15 @@ Big caveat here: everyone must be on the same network to play.  When there's no 
 
 All the client does is project a square, in the color of the team (blue or yellow) that you are on.  The client itself makes this decision by modding the ID that socket.io assigns; if you want to be on the other team, reload the page.  (Crude, right? I warned you it was crude.)
 
-### console.js
+The pad is divided into a grid with an odd number of squares in each row and column. If you're pressing in the middle, you're at {x:0, y:0} and you won't move. If you go up a bit you'll be at  {x:0, y:-1} and your dot will start to move up.  All we're doing is communicating that pair of numbers from the client to the console, and if you or your vehicle hasn't hit a wall, the console will update on the next refresh with your location shifted in the right direction.  This means there's no tapping, no flicking, and none of the usual drag-down-go-back up stuff; it's just a joystick.
 
-Some really horrible stuff in here, particularly my collision detection and player handling.  
+### console.html
 
-Players are in an object keyed by their socket ID; they should be in an array for much faster access. 
+Like the client, the console is a simple load-once page that starts a socket connection and listens for input. It's the source of truth about where things live and what they're doing on the screen, not the game-runner at server.js.
+
+There's some genuinely horrible stuff in here, particularly my collision detection and player handling.  
+
+Players live in an object keyed by their socket ID; they should be in an array for much faster access. 
 
 Collision detection is kept simple by the fact that everything on the screen is a square; all you need is this:
 
