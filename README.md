@@ -37,6 +37,10 @@ Important note: much (most) of this code is crap.  Please a) don't judge me by i
 
 The JavaScript inside the client and the console is case-hardened, meaning that it would (theoretically) run as third-party JavaScript inside any other Web page.  See my [De-Suckifying Third-Party JavaScript](https://github.com/kentbrew/desuckify) talk for more about all that.
 
+## Installing
+
+You'll need node.js and socket.io.  Install [node.js](http://nodejs.org/), fork [the GitHub repo](https://github.com/kentbrew/dotsnboxes) to your local machine, and run `npm install socket.io` from the repo directory.
+
 ## Running
 
 Everyone must be on the same network to play.  
@@ -45,7 +49,9 @@ You'll need to figure out your IP address. I open up a terminal window and run n
 
 Don't try to serve this from 127.0.0.1 or localhost; connected devices need to know the IP address running server.js or they won't be able to see it.
 
-Once you know your IP address, bring up a fresh window (Chrome = best as of now) and enter http://[youripaddress]:8001.  If all is good, the console will come up and show the right address for clients that wish to connect.  
+Once you know your IP address, start the server.  To do this, open up a terminal window, navigate to your repo directory, and enter `node server.js`.
+
+Server running? Bring up a fresh window (Chrome = best as of now) and enter http://[youripaddress]:8001.  If all is good, the console will come up and show the right address for clients that wish to connect.  
 
 Don't run more than one console window; it would be Bad.
 
