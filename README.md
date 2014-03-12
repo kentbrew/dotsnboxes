@@ -1,4 +1,3 @@
-dotsnboxes
-==========
+# Dots and Boxes
 
-Dots and Boxers
+A prototype multiplayer game. Should run on your laptop with node.js, socket.io, and most modern handheld devices.
