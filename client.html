@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta names="apple-mobile-web-app-status-bar-style" content="black" />
+		<title>Many Player Client</title>
+		<meta charset="utf-8">
+		<style>
+      body {
+        font-family: 'Helvetica Neue', helvetica, sans-serif;
+      	overflow: hidden;
+      	margin: 0;
+      	padding: 0;
+      	text-align: center;
+      	background: #000;
+      	user-select: none;
+      	-webkit-user-select: none;
+      }
+      #pad {
+        background: #ffff00;
+        width: 300px;
+        height: 300px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-left: -150px;
+        margin-top: -150px;
+      }
+      #pad._0{
+        background: #6666ff;
+      }
+
+    </style>
+	</head>
+	<body>
+	  <div id="bd">
+	    <div id="pad"></div>
+		</div>
+    <script>
+
+      window.requestAnimFrame = (function(){
+        /*
+        return  function(callback, element){
+          window.setTimeout(callback, 33);
+        };
+        */
+        
+        return window.requestAnimationFrame       || 
+        window.webkitRequestAnimationFrame || 
+        window.mozRequestAnimationFrame    || 
+        window.oRequestAnimationFrame      || 
+        window.msRequestAnimationFrame     || 
+        function(callback, element){
+          window.setTimeout(callback, 33);
+        };
+        
+      })();
+      
+      (function (w, d, a) {
+        var $ = w[a.root] = {
+          'a': a, 'd': d, 'w': w, 's': {}, 'v': {'lastX': 0, 'lastY': 0},
+          'f': (function () {
+            return {
+              update: function () {
+            		if ($.v.dx !== $.v.lastX || $.v.dy !== $.v.lastY) {
+            		  if ($.v.socket) {
+            		    $.v.socket.emit("move", {'dx': $.v.dx, 'dy': $.v.dy});
+            		  }
+            		  $.v.lastX = $.v.dx;
+            		  $.v.lastY = $.v.dy;
+            		}
+              },
+              animate: function () {
+                $.f.update();
+              	window.requestAnimFrame($.f.animate);
+              },
+              leave: function () {
+                $.v.socket.emit("leave", {});
+              },
+              getMove: function (e) {
+                if (e.pageX) {
+          		    $.v.dx = ~~((e.pageX - $.s.pad.offsetLeft)/20)-7;
+          		    $.v.dy = ~~((e.pageY - $.s.pad.offsetTop)/20)-7;
+          		  }
+              },
+              haltMove: function (e) {
+          		  $.v.dx = 0;
+          		  $.v.dy = 0;
+              },
+              join: function () {
+                var t = (this.socket.sessionid.charCodeAt(0) % 2);
+                $.s.pad.className = '_' + t;
+                $.v.socket.emit("join", {});
+                if ('ontouchstart' in $.d.documentElement) {
+                  $.s.pad.addEventListener("touchmove", function(e) { 
+                    $.f.getMove(e);
+            		  });
+                  $.s.pad.addEventListener("touchend", function(e) { 
+                    $.f.haltMove(e);
+            		  });
+            		  // don't let the body of the page be dragged around
+                  $.d.b.addEventListener("touchmove", function(e) { 
+                    e.preventDefault();
+            		  });               
+          		  } else {
+                  $.s.pad.addEventListener("mousemove", function(e) { 
+                    $.f.getMove(e);
+            		  });   
+                  $.s.pad.addEventListener("mousedown", function(e) { 
+                    $.f.haltMove(e);
+            		  });
+          		  }
+          		  $.f.animate();
+              },
+              init: function () {
+                $.d.b = $.d.getElementsByTagName('BODY')[0];
+                $.s.pad = $.d.getElementById('pad');
+                
+                var sock = $.d.createElement('SCRIPT');
+                sock.src = 'http://' + $.w.location.hostname + ':8000/socket.io/socket.io.js'
+                
+                sock.onload = function () {
+                	$.v.socket = io.connect("http://" + $.w.location.hostname, {port: 8000, transports: ["websocket"]});
+                  $.v.socket.on("connect", $.f.join);
+                  $.v.socket.on("disconnect", $.f.leave);
+                }
+                $.d.b.appendChild(sock);               
+              }
+            };
+          }())
+        }; 
+        $.f.init();     
+      }(window, document, {
+        'root': 'CLIENT',
+        'updateInterval': 33
+      } ));
+    </script>
+	</body>
+</html>

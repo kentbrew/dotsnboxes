@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Many Player Console</title>
+		<meta charset="utf-8">
+		<style>
+    * { 
+      box-sizing: border-box; 
+      -moz-box-sizing: border-box; 
+      -ms-box-sizing: border-box; 
+    }
+    body {
+    	overflow: hidden;
+    	margin: 0;
+    	padding: 0;
+    	text-align: center;
+    	background: #030;
+    }
+    #board {
+      position: absolute;
+    	border: 3px solid #fff;
+    	background: #000;
+    	height: 600px;
+    	width: 600px;
+    	top: 50%;
+    	left: 50%;
+    	margin-top: -300px;
+    	margin-left: -300px;
+    }
+    p#ip {
+      font-size: 22px;
+      font-family: Consolas, 'Courier New', monospaced;
+      font-weight: bold;
+      color: #fff;
+    }
+    </style>
+	</head>
+	<body>
+
+    <p id="ip"></p>
+		<canvas id="board" height="600" width="600"></canvas>
+		<script>
+      window.requestAnimFrame = (function(){
+        return  window.requestAnimationFrame       || 
+        window.webkitRequestAnimationFrame || 
+        window.mozRequestAnimationFrame    || 
+        window.oRequestAnimationFrame      || 
+        window.msRequestAnimationFrame     || 
+        function(callback, element){
+          window.setTimeout(callback, 33);
+        };
+      })();
+
+      (function (w, d, a) {
+        var $ = w[a.root] = {
+          'a': a, 'd': d, 'w': w, 's': {'player': {}}, 'v': {'player': {}},
+          'f': (function () {
+            return {
+              // skeeziest possible collision detection
+              collide: function (a, b) {
+                return !(
+                  (b.y > (a.y + a.h)) ||
+                  (a.y > (b.y + b.h)) ||
+                  (b.x > (a.x + a.w)) ||
+                  (a.x > (b.x + b.w))
+                );
+              },
+              // move a thing without letting it go offscreen
+              delta: function (obj) {
+ 
+                var zero = function() {
+                  obj.dx = 0;
+                  obj.dy = 0;
+                };
+
+                var tx = obj.x + obj.dx;
+                if (tx < 0) {
+                  zero();
+                  return;
+                } else {
+                  if (tx + obj.s > $.a.boardSize) {
+                    zero();
+                    return
+                  }
+                }
+
+                var ty = obj.y + obj.dy;
+                if (ty < 0) {
+                  zero();
+                  return;
+                } else {
+                  if (ty + obj.s > $.a.boardSize) {
+                    zero();
+                    return;
+                  }
+                }
+                
+                obj.x = obj.x + obj.dx;
+                obj.y = obj.y + obj.dy;
+                                
+              },
+              // reset box and player position
+              crash: function (box) {
+                // reset player
+                var player = $.v.player[box.p];
+                if (player) {
+                  player.v = 0;
+                  player.y = $.a.boardSize / 2 - $.a.playerSize / 2;
+                  if (player.c === 1) {
+                    player.x = 70;
+                  } else {
+                    player.x = $.a.boardSize - 70;
+                  }
+                  player.dx = 0;
+                  player.dy = 0;
+                }
+
+                // reset box
+                box.c = '#fff';
+                box.p = '';
+                box.x = $.a.goalSize + 20 + box.n * $.a.boxSize * 1.5;
+                if (box.n % 2) {
+                  box.y = 50 - $.a.boxSize;
+                } else {
+                  box.y = $.a.boardSize - 50;
+                }
+                
+              },
+              
+              win: function (team) {
+                $.v.win = {'team': team, 'count': 50};
+                $.v.score[0] = 0;
+                $.v.score[1] = 0;
+              },
+              
+              // increment score
+              score: function (team) {
+                $.s.ctx.fillStyle = $.a.teamColor[team];
+                $.s.ctx.fillRect(0, 0, $.a.boardSize, $.a.boardSize);             
+                for (var i = 0; i < $.v.box.length; i = i + 1) {
+                  $.f.crash($.v.box[i]);
+                }
+                $.v.ball.x = $.a.boardSize / 2 - $.a.ballSize / 2;
+                $.v.ball.y = $.a.boardSize / 2 - $.a.ballSize / 2;
+                $.v.score[team]++;
+                if ($.v.score[team] >= $.a.win) {
+                  $.f.win(team);
+                }
+              },
+              
+              // draw the universe
+              draw: function () {
+              
+                if ($.v.win.count) {
+                  // flash the win
+                  $.s.ctx.fillStyle = $.a.teamColor[$.v.win.team];
+                  $.s.ctx.fillStyle = $.a.bgColor;
+                  $.s.ctx.fillStyle = $.a.teamColor[1];
+                  $.s.ctx.font = '100pt Courier';
+                  $.s.ctx.fillStyle = '#000';
+                  $.s.ctx.fillText('Win!', 180, 320);                                  
+                  $.v.win.count = $.v.win.count - 1;
+                } else {
+                  // black background at 10% opacity
+                  $.s.ctx.fillStyle = $.a.bgColor;
+                  $.s.ctx.fillRect(0, 0, $.a.boardSize, $.a.boardSize);
+                }
+                       
+                // yellow goal           
+                $.s.ctx.beginPath();
+                $.s.ctx.strokeStyle = $.a.teamColor[1];
+                $.s.ctx.moveTo($.a.boardSize - $.a.goalSize, 0);
+                $.s.ctx.lineTo($.a.boardSize - $.a.goalSize, $.a.boardSize);
+                $.s.ctx.stroke();
+                
+                // blue goal
+                $.s.ctx.beginPath();
+                $.s.ctx.strokeStyle = $.a.teamColor[0];
+                $.s.ctx.moveTo($.a.goalSize, 0);
+                $.s.ctx.lineTo($.a.goalSize, $.a.boardSize);
+                $.s.ctx.stroke();
+
+                // score
+                $.s.ctx.font = '30pt Courier';
+                $.s.ctx.fillStyle = $.a.teamColor[1];
+                $.s.ctx.fillText($.v.score[1], $.a.boardSize - 30, $.a.boardSize / 2 );
+                $.s.ctx.fillStyle = $.a.teamColor[0];
+                $.s.ctx.fillText($.v.score[0], 10, $.a.boardSize / 2);    
+                                         
+                // ball
+                $.s.ctx.strokeStyle = $.v.ball.c;
+                $.s.ctx.strokeRect($.v.ball.x, $.v.ball.y, $.a.ballSize, $.a.ballSize);
+                
+                // move dots
+                for (var p in $.v.player) {
+                  var pl = $.v.player[p];
+                  $.f.delta(pl);
+
+                  $.s.ctx.fillStyle = $.a.teamColor[pl.c];
+                  $.s.ctx.fillRect(pl.x, pl.y, $.a.playerSize, $.a.playerSize);
+                  
+                  if (!pl.v) {
+                    // capture a box?
+                    for (var i = 0; i < $.v.box.length; i = i + 1) {
+                      var v = $.v.box[i];
+                      if (!v.p) {
+                        // driveable
+                        if ($.f.collide(v, pl)) {
+                          v.p = p;
+                          v.c = pl.c;
+                          pl.v = i + 1;
+                          break;
+                        } 
+                      }
+                    }
+                  } else {
+                    // we are driving; check for out of bounds
+                    if (pl.x < $.v.edge.box.left || pl.x > $.v.edge.box.right || pl.y < $.v.edge.box.top || pl.y > $.v.edge.box.bottom) {
+                      $.f.crash($.v.box[pl.v - 1]);
+                    }
+                  }
+                  
+                }                
+                
+                // move boxes
+                for (var i = 0; i < $.v.box.length; i = i + 1) {
+                  var box = $.v.box[i];
+                  var p = box.p;
+                  
+                  // someone is driving
+                  if (p) {
+                  
+                    var pl = $.v.player[p];
+
+                    // dropped connection
+                    if (!pl) {
+                      $.f.crash(box);
+                      
+                    } else {
+                    
+                      // player is driving
+                      box.x = pl.x - $.a.boxSize / 2 + $.a.playerSize / 2;
+                      box.y = pl.y - $.a.boxSize / 2 + $.a.playerSize / 2;
+                      
+                      // have I collided with aomwonw?
+                    
+                      for (var j = 0; j < $.v.box.length; j = j + 1) {
+                      
+                        // no need to check if I've collided with myself
+                        if (j !== i) {
+                          var me = $.v.box[i];
+                          var k = $.v.box[j];
+
+                          // somebody is driving this box
+                          if (k.p) {
+                            // we've hit
+                            if ($.f.collide(k, me)) {
+                            
+                              // he's an enemy
+                              if (k.c !== me.c) {
+                                // am I behind him?
+                                if ($.v.player[k.p].vector === $.v.player[me.p].vector) {
+                                  $.f.crash(k);
+                                  return;
+                                  
+                                }
+                              }
+
+                              // there has been a collision but neither player has crashed
+                              
+                              // send other player in my direction
+                              $.v.player[k.p].dx = $.v.player[me.p].dx;
+                              $.v.player[k.p].dy = $.v.player[me.p].dy;
+                              // other player will drift until he changes direction
+                              $.v.player[k.p].q = true;
+                              
+                              // bump me backwards
+                              $.v.player[me.p].dx = 0 - $.v.player[me.p].dx;
+                              $.v.player[me.p].dy = 0 - $.v.player[me.p].dy;
+                              // I will recover immediately and go back the same direction; 
+                              // changing directions here to gain a bit of space and avoid tangling
+                              
+                              break;
+
+                            }
+
+                          }
+                        }
+                      }                      
+                      
+
+                      // are we pushing the ball?
+
+                      if ($.f.collide($.v.ball, box)) {
+                        $.v.ball.dx = pl.dx;
+                        $.v.ball.dy = pl.dy;
+                        
+                        pl.dx = 0;
+                        pl.dy = 0;
+                        $.f.delta($.v.ball);
+                        
+                        // ball pushes other boxes out of the way?
+                        
+                        for (var j = 0; j < $.v.box.length; j = j + 1) {
+                          if (j !== i) {
+                            var push = $.v.box[j]; 
+                            if ($.f.collide(push, $.v.ball)) {
+                              if (push.p && $.v.player[push.p]) {
+                                $.v.player[push.p].dx = $.v.ball.dx * 2;
+                                $.v.player[push.p].dy = $.v.ball.dy * 2;
+                                $.f.delta($.v.player[push.p]);
+                                $.v.player[push.p].dy = 0;
+                                $.v.player[push.p].dx = 0;
+                              }
+                            }                  
+                          }
+                        }
+                                               
+                        // haz goal?
+                        
+                        if ($.v.ball.x  < $.v.edge.ball.left) {
+                          $.f.score(0);
+                        }
+
+                        if ($.v.ball.x + $.a.ballSize > $.v.edge.ball.right) {
+                          $.f.score(1);
+                        }
+                        
+                      }
+                    }
+                  }
+                  $.s.ctx.strokeStyle = $.a.teamColor[box.c] || '#aaa';
+                  
+                  if (box.p) {
+                    $.s.ctx.beginPath();
+                    
+                    var p = $.v.player[box.p];
+                    
+                    $.f.drawBox[p.vector](box);
+                    
+                    $.s.ctx.stroke();
+
+                  } else {
+                     $.s.ctx.strokeRect(box.x, box.y, $.a.boxSize, $.a.boxSize);
+                  }
+                  
+                  
+                }
+              },
+              drawBox : {
+                left: function (box) {
+                  $.s.ctx.beginPath();
+                  $.s.ctx.moveTo(box.x + $.a.boxSize, box.y);
+                  $.s.ctx.lineTo(box.x, box.y);
+                  $.s.ctx.lineTo(box.x, box.y + $.a.boxSize);
+                  $.s.ctx.lineTo(box.x + $.a.boxSize, box.y + $.a.boxSize);
+                },
+                right: function (box) {
+                  $.s.ctx.beginPath();
+                  $.s.ctx.moveTo(box.x, box.y);
+                  $.s.ctx.lineTo(box.x + $.a.boxSize, box.y);
+                  $.s.ctx.lineTo(box.x + $.a.boxSize, box.y + $.a.boxSize);
+                  $.s.ctx.lineTo(box.x, box.y + $.a.boxSize);
+                }
+              },
+              // the loop 
+              animate: function () {
+                $.f.draw();
+              	window.requestAnimFrame($.f.animate);
+              },
+              // communication received from client
+              move: function (data) {
+                var p = $.v.player[data.id];
+                if (p) {
+                  if (p.q === true) {
+                    // has player moved?
+                    if (p.dx !== data.dx || p.dy !== data.dy) {
+                      p.dx = data.dx;
+                      p.dy = data.dy;
+                      p.q = false;
+                    }
+                  } else {
+                    p.dx = data.dx;
+                    p.dy = data.dy;
+                    if (p.dx < 0) {
+                      p.vector = 'left';
+                    } else {
+                      p.vector = 'right';
+                    }
+                    
+                  }
+                }
+              },
+
+              // new player
+              join: function (data) {
+                var y = $.a.boardSize / 2 - $.a.playerSize / 2;
+                var x = 70;
+                if (!data.c) {
+                  x = $.a.boardSize - 70;
+                }
+                $.w.setTimeout(function () {
+                $.v.player[data.id] = {
+                  'q': false,
+                  'c': data.c,
+                  's': $.a.playerSize,
+                  'x': x,
+                  'y': y,
+                  'h': $.a.playerSize,
+                  'w': $.a.playerSize,
+                  'dx': 0,
+                  'dy': 0
+                }}, 10);
+              },
+              // player leaves
+              leave: function (data) {
+                delete $.v.player[data.id];
+              },
+              // socket running; get ready to serve
+              go: function () {
+              
+                $.v.box = [];
+                
+                $.v.score = [0, 0];
+                
+                for (var i = 0; i < $.a.boxCount; i = i + 1) {
+                  $.v.box.push({
+                    'n': i,
+                    'c': $.a.boxColor,
+                    's': $.a.boxSize,
+                    'x': 0,
+                    'y': 0,
+                    'w': $.a.boxSize,
+                    'h': $.a.boxSize,
+                    'p': ''
+                  });
+                  $.f.crash($.v.box[i]);
+                }
+                
+                $.v.ball = {
+                  'c': $.a.ballColor,
+                  'x': $.a.boardSize / 2 - $.a.ballSize / 2,
+                  'y': $.a.boardSize / 2 - $.a.ballSize / 2,
+                  'dx': 0,
+                  'dy': 0,
+                  's': $.a.ballSize,
+                  'h': $.a.ballSize,
+                  'w': $.a.ballSize
+                };
+                
+                $.v.edge = {'box': {}, 'ball': {}};
+                
+                $.v.edge.box.top = $.a.boxSize / 2;
+                $.v.edge.box.left = $.a.boxSize / 2;
+                $.v.edge.box.bottom = $.a.boardSize - $.a.boxSize / 2;
+                $.v.edge.box.right = $.a.boardSize - $.a.boxSize / 2;
+
+                $.v.edge.ball.top = 0;
+                $.v.edge.ball.bottom = $.a.boardSize - $.a.ballSize;
+                $.v.edge.ball.left = $.a.goalSize;
+                $.v.edge.ball.right = $.a.boardSize - $.a.goalSize;
+                                
+                // show the connect address for clients
+                $.s.ip = $.d.getElementById('ip');
+                var h = $.w.location.hostname;
+                var s = 'http://' + h + ':8080';
+                if (h.match(/^169/)) {
+                  s = 'network:' + $.a.lan + ' address:' + s;
+                }
+                $.s.ip.innerHTML = s;	
+                
+                $.s.board = $.d.getElementById('board');	  
+                $.s.ctx = $.s.board.getContext("2d");
+                $.s.ctx.lineWidth = 3;
+
+                // this should have a callback attached
+              	$.v.io = io.connect("http://" + $.w.location.hostname, {port: 8000, transports: ["websocket"]});
+              	
+              	// may spew errors if socket isn't running yet
+                $.v.io.on("join", $.f.join);
+                $.v.io.on("move", $.f.move);
+                $.v.io.on("leave", $.f.leave);
+                
+                $.v.win = {'team': 0, 'count': 0};
+                
+                // let's rock
+                $.f.animate();
+              },
+              init: function () {
+                // roll socket.io
+                $.d.b = $.d.getElementsByTagName('BODY')[0];
+                var sock = $.d.createElement('SCRIPT');
+                sock.src = 'http://' + $.w.location.hostname + ':8000/socket.io/socket.io.js'
+                sock.onload = function () {
+                  $.f.go();
+                }
+                $.d.b.appendChild(sock);
+              }
+            };
+          }())
+        }; 
+        $.f.init();     
+      }(window, document, {
+        'root': 'CONSOLE',
+        'lan': 'kentbrew',
+        'boardSize': 600,
+        'goalSize': 40,
+        'boxSize': 20,
+        'boxCount': 16,
+        'boxColor': '#fff',
+        'ballSize': 50,
+        'ballColor': '#f00',
+        'playerSize': 6,
+        'bgColor': 'rgba(0, 0, 0, .1)',
+        'lineColor': '#fff',
+        'win': 7,
+        'teamColor': [
+          '#aaaaff',
+          '#ffff00'
+        ]
+      } ));
+		</script>
+	</body>
+</html>
