@@ -27,11 +27,17 @@
     	margin-top: -300px;
     	margin-left: -300px;
     }
-    p#ip {
+    p#ip, p#gh {
       font-size: 22px;
       font-family: Consolas, 'Courier New', monospaced;
       font-weight: bold;
       color: #fff;
+    }
+    p#gh {
+      position:absolute;
+      text-align: center;
+      width: 100%;
+      bottom: 0;
     }
     </style>
 	</head>
@@ -39,6 +45,7 @@
 
     <p id="ip"></p>
 		<canvas id="board" height="600" width="600"></canvas>
+		<p id="gh">http://kentbrew.com/dotsnboxes</p>
 		<script>
       window.requestAnimFrame = (function(){
         return  window.requestAnimationFrame       || 

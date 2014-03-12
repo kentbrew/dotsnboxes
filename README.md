@@ -74,6 +74,8 @@ Collision detection is kept simple by the fact that everything on the screen is 
       );
     }
     
+Bugs abound if you use this scheme.  Players wind up entangling with each other, penetrating the big red box, and getting stuck in the wall. 
+    
 There are no physics in this game; if you aren't driving a box, you are a ghost; if you are driving and you hit a wall, you die; and if you collide with another player or the big box in the middle, you stop moving and your momentum goes to the thing you hit.
 
 You die when you hit a wall instead of bouncing in order to encourage speeds to be kept slow.  Otherwise crap would be bouncing like crazy all over the screen.
