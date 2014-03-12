@@ -11,6 +11,7 @@ var util = require("util"),
     'a': a, 'v': {'player': {}},
     'f': (function () {
       return {       
+
         move: function (data) {
         	var p = $.v.player[this.id];
         	if (p) {
@@ -20,6 +21,7 @@ var util = require("util"),
           	this.broadcast.emit("move", {"id": this.id, "c": data.c, "dx": data.dx, "dy": data.dy });
           }
         },
+
         join: function (data) {
           var t = (this.id.charCodeAt(0) % 2);
           var p = {
@@ -45,11 +47,14 @@ var util = require("util"),
         },      
         
         init: function () {                 
+
          	$.v.io = io.listen(8000);
+
         	$.v.io.configure(function() {
         		$.v.io.set("transports", ["websocket"]);
         		$.v.io.set("log level", 2);
         	}); 
+
         	$.v.io.sockets.on("connection", 
         	  function (socket) {
             	socket.on("disconnect", $.f.clientDisconnect);
@@ -57,10 +62,13 @@ var util = require("util"),
             	socket.on("move", $.f.move);
             }
           );
+
           var fakeIcon = function(res) {
             res.writeHead(200, {'Content-Type': 'image/x-icon'} );
             res.end();
           };
+          
+          // the console page lives on port 8001
 
           var consoleHtml = '';
           fs.readFile('./console.html', function (err, data) {
